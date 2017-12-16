@@ -4,6 +4,7 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const raw = require('./data.json');
 raw.blackCards = raw.blackCards.filter(e => e.pick === 1);
+const PORT = 8080;
 
 app.use(express.static('.'))
 app.get('/', (req, res) => res.sendFile(__dirname + '/index.html'));
@@ -29,7 +30,9 @@ const _recalculateleader  = () => {
         h.isLeader = false;
         return h;
     });
-    humans[position].isLeader = true;
+    if(humans[position]) {
+        humans[position].isLeader = true;
+    }
     return humans;
 }
 
@@ -81,4 +84,4 @@ io.on('connection', (socket) => {
 
 
 
-http.listen(3000, () => console.log('listening on *:3000'));
+http.listen(PORT, () => console.log('listening on port: ', PORT));
