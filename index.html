@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>CAH 💩</title>
+    
+</head>
+
+<body style="background: lightgray">
+    <style>
+    .disabled{
+        pointer-events:none;
+        opacity:0.4;
+    }
+    </style>
+    <div id="form">
+        <input placeholder="Nick" id="nick" />
+        <button onclick="enterRoom()">Enter</button>
+    </div>
+
+    <div id="ready" hidden>
+        <p id="readyText">Im ready!</p>
+        <button onclick="ready()">Ready</button>
+    </div>
+
+    <ul id="humans"></ul>
+    
+    <h1 id="blackCard"></h1>
+    
+    <ul id="whiteCards"></ul>
+    
+    <ul id="selectedCards"></ul>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/index.js"></script>
+</body>
+
+</html>
