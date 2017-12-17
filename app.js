@@ -117,7 +117,7 @@ io.on('connection', (socket) => {
     socket.on('card-selected', (cardId, cardtext) => {
         io
             .to(_getHumans(socket.human.room, 'leader').id)
-            .emit('card-selected', cardId, cardtext, _getHumans(socket.human.room, socket.id).nick);
+            .emit('card-selected', cardId, cardtext, socket.human.nick);
     });
 
     socket.on('round-win', (humanId) => {
