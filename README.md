@@ -10,7 +10,7 @@ Made with:
 
 ## To-Do
 - [ ] Manage cards to avoid duplicates.
-- [ ] Keep session on local storage.
+- [x] Keep session on local storage.
 - [ ] UI.
 
 ## Maybe
