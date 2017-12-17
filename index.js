@@ -66,8 +66,12 @@ const _paintWhiteCards = () => {
 }
 
 const enterRoom = () => {
-    socket.emit('enter-room', document.getElementById('nick').value, document.getElementById('room').value);
+    const room = document.getElementById('room').value;
+    const $room = document.getElementById('roomInfo');
+    socket.emit('enter-room', document.getElementById('nick').value, );
     document.getElementById('form').hidden = true;
+    $room.innerHTML = `Room: ${room}`;
+    $room.hidden = false;
     document.getElementById('ready').hidden = false;
 }
 

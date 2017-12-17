@@ -99,10 +99,12 @@ io.on('connection', (socket) => {
             humans = _getHumans(socket.human.room);
         }
         
-        io.to(socket.human.room).emit('leave-room', humans);
+        if(socket.human) {
+            io.to(socket.human.room).emit('leave-room', humans);
+            if (humans.length > 2) return;
+            _newRound(socket.human.room);
+        }
 
-        if (humans.length > 2) return;
-        _newRound(socket.human.room);
     });
 
     socket.on('ready', () => {
