@@ -18,10 +18,12 @@ const _getRandomCards = (type, number) => {
 
 app.use(express.static('.'))
 app.get('/', (req, res) => res.sendFile(__dirname + '/index.html'));
-app.get('/card', (req, res) => {
-    const cardText = _getRandomCards('whiteCards', 1);
-    const card = ({ text: cardText, id: Buffer.from(cardText).toString('base64') })
-    res.json(card);
+app.get('/card/:number', (req, res) => {
+    const cards = new Array(+req.params.number).fill(1).map(c => {
+        const cardText = _getRandomCards('whiteCards', 1);
+        return { text: cardText, id: Buffer.from(cardText).toString('base64') };
+    });
+    res.json({cards});
 })
 
 const _getHumans = (room, id = false) => {

@@ -126,10 +126,9 @@ socket.on('new-round', async (_blackCard, _humans) => {
         document.getElementById('selectedCards').attributes.hidden = true;
     }
 
-    while (whiteCards.length < 10) {
-        const newCard = await (await fetch('/card')).json();
-        whiteCards.push(newCard);
-    }
+    const totalCards = 10 - whiteCards.length;
+    const res = await (await fetch(`/card/${totalCards}`)).json();
+    whiteCards = whiteCards.concat(res.cards);
     _paintWhiteCards();
 });
 
