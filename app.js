@@ -23,7 +23,7 @@ app.get('/card/:number', (req, res) => {
         const cardText = _getRandomCards('whiteCards', 1);
         return { text: cardText, id: Buffer.from(cardText).toString('base64') };
     });
-    res.json({cards});
+    res.json({ cards });
 })
 
 const _getHumans = (room, id = false) => {
@@ -89,7 +89,7 @@ io.on('connection', (socket) => {
         const humans = _getHumans(socket.human.room).filter(h => h.id !== socket.id);
 
         io.to(socket.human.room).emit('leave-room', humans);
-        if(socket.human.isLeader) {
+        if (socket.human.isLeader) {
             socket.adapter.rooms[socket.human.room].blackCard = _newRound(socket.human.room);
         }
 
@@ -99,14 +99,11 @@ io.on('connection', (socket) => {
         socket.human.ready = true;
         const room = socket.human.room;
         const humans = _getHumans(room);
-        const humansReady = humans.filter(h => h.ready).length;
-        if (humans.length === humansReady) {
-            if(!socket.adapter.rooms[socket.human.room].roomStarted) {
-                socket.adapter.rooms[socket.human.room].roomStarted = true;
-                socket.adapter.rooms[socket.human.room].blackCard = _newRound(room);
-            } else { 
-                io.to(socket.id).emit('new-round', socket.adapter.rooms[socket.human.room].blackCard, _getHumans(socket.human.room));
-            }
+        if (!socket.adapter.rooms[room].roomStarted) {
+            socket.adapter.rooms[room].roomStarted = true;
+            socket.adapter.rooms[room].blackCard = _newRound(room);
+        } else {
+            io.to(socket.id).emit('new-round', socket.adapter.rooms[socket.human.room].blackCard, humans);
         }
     });
 

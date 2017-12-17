@@ -8,6 +8,7 @@ const $room = document.getElementById('room');
 const $nick = document.getElementById('nick');
 const $form = document.getElementById('form');
 const $ready = document.getElementById('ready');
+const $panel = document.getElementById('gamePanel');
 
 const checkSession = () => {
     const nick = localStorage.getItem('nick') || false;
@@ -68,6 +69,8 @@ const selectCard = async event => {
     const cardLIToRemove = document.querySelector(`[data-id~="${cardId}"]`).parentNode;
     cardLIToRemove.parentNode.removeChild(cardLIToRemove);
     socket.emit('card-selected', cardId, cardtext);
+    whiteCards = whiteCards.filter(c => c.id !== cardId);
+
     document.getElementById('whiteCards').classList.add('disabled');
 }
 
@@ -101,6 +104,7 @@ const enterRoom = () => {
 const ready = () => {
     socket.emit('ready');
     $ready.hidden = true;
+    $panel.hidden = false;
 }
 
 socket.on('enter-room', _updateHumans);

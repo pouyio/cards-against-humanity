@@ -22,13 +22,15 @@
     <p id="roomInfo" hidden></p>
     <a href="" onclick="leaveRoom()">Leave</a>
 
-    <ul id="humans"></ul>
+    <div id="gamePanel" hidden>
+        <ul id="humans"></ul>
     
-    <h1 id="blackCard"></h1>
-    
-    <ul id="whiteCards"></ul>
-    
-    <ul id="selectedCards"></ul>
+        <h1 id="blackCard"></h1>
+        
+        <ul id="whiteCards"></ul>
+        
+        <ul id="selectedCards"></ul>
+    </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="/index.js"></script>
