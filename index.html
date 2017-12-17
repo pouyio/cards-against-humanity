@@ -8,7 +8,7 @@
 </head>
 
 <body style="background: lightgray">
-    <div id="form">
+    <div id="form" hidden>
         <input placeholder="Nick" id="nick" />
         <input placeholder="Room" id="room" />
         <button onclick="enterRoom()">Enter</button>
@@ -20,6 +20,7 @@
     </div>
 
     <p id="roomInfo" hidden></p>
+    <a href="" onclick="leaveRoom()">Leave</a>
 
     <ul id="humans"></ul>
     
