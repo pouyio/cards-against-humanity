@@ -98,14 +98,14 @@ io.on('connection', (socket) => {
         const room = socket.human.room;
         const humans = _getHumans(room);
         const humansReady = humans.filter(h => h.ready).length;
-        // if (humans.length === humansReady) {
+        if (humans.length === humansReady) {
             if(!socket.adapter.rooms[socket.human.room].roomStarted) {
                 socket.adapter.rooms[socket.human.room].roomStarted = true;
                 socket.adapter.rooms[socket.human.room].blackCard = _newRound(room);
             } else { 
-                io.to(socket.id).emit('new-round', socket.adapter.rooms[socket.human.room].blackCard, _getHumans());
+                io.to(socket.id).emit('new-round', socket.adapter.rooms[socket.human.room].blackCard, _getHumans(socket.human.room));
             }
-        // }
+        }
     });
 
     socket.on('card-selected', (cardId, cardtext) => {
