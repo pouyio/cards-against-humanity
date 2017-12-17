@@ -85,25 +85,21 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-        let leader = false;
-        if(socket.human) {
-            leader = _getHumans(socket.human.room, 'leader');
-        }
+    
+        if(!socket.human) return; 
+    
+        const leader = _getHumans(socket.human.room, 'leader');
+        
         
         if (leader && (leader.id === socket.id)) {
             _recalculateleader(socket.human.room);
         }
 
-        let humans = [];
-        if(socket.human) {
-            humans = _getHumans(socket.human.room);
-        }
+        const humans = _getHumans(socket.human.room);
         
-        if(socket.human) {
-            io.to(socket.human.room).emit('leave-room', humans);
-            if (humans.length > 2) return;
-            _newRound(socket.human.room);
-        }
+        io.to(socket.human.room).emit('leave-room', humans);
+        if (humans.length > 2) return;
+        _newRound(socket.human.room);
 
     });
 
