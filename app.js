@@ -5,83 +5,129 @@ const io = require('socket.io')(http);
 const raw = require('./data.json');
 raw.blackCards = raw.blackCards.filter(e => e.pick === 1);
 const PORT = 8080;
+let leavingRoom;
+
+const _getRandomCards = (type, number) => {
+    const _card = () => raw[type][Math.floor(Math.random() * raw[type].length)];
+
+    if (number === 1) {
+        return _card();
+    } else {
+        return Array(10).fill(1).map(_card);
+    }
+}
 
 app.use(express.static('.'))
 app.get('/', (req, res) => res.sendFile(__dirname + '/index.html'));
-app.get('/card', (req, res) => res.send(raw.whiteCards[Math.floor(Math.random() * raw.whiteCards.length)]));
+app.get('/card', (req, res) => res.send(_getRandomCards('whiteCards', 1)));
 
-let humans = [];
+const _getHumans = (room, id = false) => {
+    const humans = [];
 
-const _drawCards = () => {
+    if(id && id !== 'leader' ) {
+        return io.sockets.connected[id].human;
+    }
+
+    Object.keys(io.sockets.connected).forEach((socketID) => {
+        const human = io.sockets.connected[socketID].human;
+        if (human && human.room === room) humans.push(human);
+    });
+
+    if (id === 'leader') return humans.find(h => (h.isLeader && h.room === room));
+
+    return humans;
+}
+
+const _drawCards = (room) => {
+    const humans = _getHumans(room);
     humans.map(h => {
-        const cards = Array(10)
-            .fill(1)
-            .map(e => raw.whiteCards[Math.floor(Math.random() * raw.whiteCards.length)])
-            .map((e, i) => ({ text: e, id: Buffer.from(e).toString('base64') }));
+        const cards = _getRandomCards('whiteCards', 10).map((e, i) => ({ text: e, id: Buffer.from(e).toString('base64') }));
         io.to(h.id).emit('white-cards', cards)
     });
 }
 
-const _recalculateleader  = () => {
-    let position = humans.findIndex(h => h.isLeader) + 1;
-    if(position >= humans.length) position = 0;
+const _recalculateleader = (room) => {
+    const humans = Object.values(io.sockets.connected)
+        .filter(s => s.human && ( s.human.room === room))
+        .map(s => s.human);
 
-    humans = humans.map(h => {
-        h.isLeader = false;
-        return h;
-    });
-    if(humans[position]) {
-        humans[position].isLeader = true;
+    if (!humans.length) return [];
+
+    const leaderIndex = humans.findIndex(h => h.isLeader);
+    let newLeaderIndex = 0;
+
+    if (!(leaderIndex === -1) && !(leaderIndex + 1 === humans.length)) {
+        newLeaderIndex = leaderIndex + 1;
     }
-    return humans;
+
+    if (leaderIndex !== -1) humans[leaderIndex].isLeader = false;
+    humans[newLeaderIndex].isLeader = true;
+
+    return _getHumans(room);
 }
 
-const _newRownd = () => {
-    humans = _recalculateleader();
-    io.emit('new-round', raw.blackCards[Math.floor(Math.random() * raw.blackCards.length)].text, humans);
+const _newRound = (room) => {
+    io.to(room).emit('new-round', _getRandomCards('blackCards', 1).text, _recalculateleader(room));
+}
+
+const _updateCounter = (humanId, amount) => {
+    io.sockets.connected[humanId].human.counter += amount;
 }
 
 io.on('connection', (socket) => {
 
-    socket.emit('just-connected', humans, socket.id);
+    socket.emit('just-connected', socket.id);
 
-    socket.on('enter-room', (nick) => {
-        humans.push({ nick, id: socket.id, counter: 0, isLeader: false, leaderCounter: 0 });
-        io.emit('enter-room', humans);
+    socket.on('enter-room', (nick, room) => {
+        socket.join(room);
+        socket.human = { nick, counter: 0, isLeader: false, id: socket.id, room};
+        io.to(room).emit('enter-room', _getHumans(room));
     });
 
     socket.on('disconnect', () => {
-        humans = humans.filter(h => h.id !== socket.id);
-        io.emit('leave-room', humans);
-        _newRownd();
+        let leader = false;
+        if(socket.human) {
+            leader = _getHumans(socket.human.room, 'leader');
+        }
+        
+        if (leader && (leader.id === socket.id)) {
+            _recalculateleader(socket.human.room);
+        }
+
+        let humans = [];
+        if(socket.human) {
+            humans = _getHumans(socket.human.room);
+        }
+        
+        io.to(socket.human.room).emit('leave-room', humans);
+
+        if (humans.length > 2) return;
+        _newRound(socket.human.room);
     });
 
     socket.on('ready', () => {
-        const index = humans.findIndex(h => h.id === socket.id);
-        humans[index].ready = true;
-        const allReady = humans.filter(h => h.ready).length;
-        if (humans.length === allReady && allReady > 1) {
-            _drawCards();
-            _newRownd();
+        socket.human.ready = true;
+        const room = socket.human.room
+        const humans = _getHumans(room);
+        const humansReady = humans.filter(h => h.ready).length;
+        if (humans.length === humansReady && humansReady > 1) {
+            _drawCards(room);
+            _newRound(room);
         }
     });
 
     socket.on('card-selected', (cardId, cardtext) => {
-        const leader = humans.find(h => h.isLeader);
-        if (leader.id !== socket.id) {
-            io.to(leader.id).emit('card-selected', cardId, cardtext, humans.find(h => h.id === socket.id).nick);
-        }
+        io
+            .to(_getHumans(socket.human.room, 'leader').id)
+            .emit('card-selected', cardId, cardtext, _getHumans(socket.human.room, socket.id).nick);
     });
-    
+
     socket.on('round-win', (humanId) => {
-        const index = humans.findIndex(h => h.id === humanId);
-        humans[index].counter++;
+        _updateCounter(humanId, 1);
         io.to(humanId).emit('you-won');
-        _newRownd();
+        _newRound(socket.human.room);
     });
 
 });
-
-
 
 http.listen(PORT, () => console.log('listening on port: ', PORT));

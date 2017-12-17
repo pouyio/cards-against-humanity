@@ -14,22 +14,22 @@ const _updateHumans = (_friends) => {
     leader = humans.find(h => h.isLeader);
     const ul = document.getElementById('humans');
     ul.innerHTML = '';
-    _friends.forEach(friend => {
+    humans.forEach(human => {
         const node = document.createElement('LI');
-        node.style.fontSize = friend.id === myId ? 'larger':'inherit';
-        node.style.fontWeight = friend.id === myId ? 'bold':'inherit';
-        let textnode = document.createTextNode(`${friend.id === myId ? '🔵': '⚫️'}️ ${friend.nick} : ${friend.counter}`);
+        node.style.fontSize = human.id === myId ? 'larger':'inherit';
+        node.style.fontWeight = human.id === myId ? 'bold':'inherit';
+        let textnode = document.createTextNode(`${human.id === myId ? '🔵': '⚫️'}️ ${human.nick} : ${human.counter}`);
         
-        if(leader && (leader.id === friend.id)) {
-            textnode = document.createTextNode(`👑 ${friend.nick} : ${friend.counter}`);
+        if(leader && (leader.id === human.id)) {
+            textnode = document.createTextNode(`👑 ${human.nick} : ${human.counter}`);
         } 
         node.appendChild(textnode);
 
-        if(leader && leader.id === myId && friend.id !== myId) {
+        if(leader && leader.id === myId && human.id !== myId) {
             const nodePlus = document.createElement('BUTTON');
             const textPlus = document.createTextNode(' 🦄 Win');
-            nodePlus.dataset.id = friend.id;
-            nodePlus.dataset.nick = friend.nick;
+            nodePlus.dataset.id = human.id;
+            nodePlus.dataset.nick = human.nick;
             nodePlus.onclick = humanPlus;
             nodePlus.appendChild(textPlus);
             node.appendChild(nodePlus);
@@ -66,7 +66,7 @@ const _paintWhiteCards = () => {
 }
 
 const enterRoom = () => {
-    socket.emit('enter-room', document.getElementById('nick').value);
+    socket.emit('enter-room', document.getElementById('nick').value, document.getElementById('room').value);
     document.getElementById('form').hidden = true;
     document.getElementById('ready').hidden = false;
 }
@@ -78,10 +78,7 @@ const ready = () => {
 
 socket.on('enter-room', _updateHumans);
 socket.on('leave-room', _updateHumans);
-socket.on('just-connected', (humans, id)=> {
-    myId = id;
-    _updateHumans(humans);
-});
+socket.on('just-connected', (id) => myId = id);
 
 socket.on('new-round', async (_blackCard, _humans) => {
     humans = _humans;
