@@ -5,9 +5,9 @@ const fs = require('fs');
 const https = require('https');
 const http = require('http');
 const options = {
-                key: fs.readFileSync('/etc/letsencrypt/live/comic/privkey.pem'),
-                cert: fs.readFileSync('/etc/letsencrypt/live/comic/fullchain.pem')
-        }
+    key: fs.readFileSync('/etc/letsencrypt/live/comic/privkey.pem'),
+    cert: fs.readFileSync('/etc/letsencrypt/live/comic/fullchain.pem')
+}
 const server2 = http.createServer(app2);
 const server = https.createServer(options, app);
 const io = require('socket.io').listen(server);
@@ -25,9 +25,7 @@ const _getRandomCards = (type, number) => {
     }
 }
 
-app2.use('*', (req, res) => {
-  res.redirect('https://' + req.headers.host + ':' + PORT);
-});
+app2.use('*', (req, res) => res.redirect(`https:// ${req.headers.host}:${PORT}`));
 
 app.use(express.static('.'))
 app.get('/', (req, res) => res.sendFile(__dirname + '/index.html'));
