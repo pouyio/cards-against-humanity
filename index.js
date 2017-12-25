@@ -10,6 +10,31 @@ const $form = document.getElementById('form');
 const $ready = document.getElementById('ready');
 const $panel = document.getElementById('gamePanel');
 
+
+class Form extends React.Component {
+
+    enterRoom() {
+        const roomText = $room.value;
+        const $roomInfo = document.getElementById('roomInfo');
+        socket.emit('enter-room', $nick.value, roomText);
+        $form.hidden = true;
+        $roomInfo.innerHTML = `Room: ${roomText}`;
+        $roomInfo.hidden = false;
+        $ready.hidden = false;
+    }
+
+
+    render() {
+        return <div id="form" hidden={this.props.hidden}>
+            <input placeholder="Nick" id="nick" />
+            <input placeholder="Room" id="room" />
+            <button onClick={this.enterRoom}>Enter</button>
+        </div>
+    }
+}
+
+ReactDOM.render(<Form />, document.getElementById('app'));
+
 const checkSession = () => {
     const nick = localStorage.getItem('nick') || false;
     const room = localStorage.getItem('room') || false;
@@ -89,16 +114,6 @@ const _paintWhiteCards = () => {
         nodeLi.appendChild(nodeBtn);
         ul.appendChild(nodeLi);
     });
-}
-
-const enterRoom = () => {
-    const roomText = $room.value;
-    const $roomInfo = document.getElementById('roomInfo');
-    socket.emit('enter-room', $nick.value, roomText);
-    $form.hidden = true;
-    $roomInfo.innerHTML = `Room: ${roomText}`;
-    $roomInfo.hidden = false;
-    $ready.hidden = false;
 }
 
 const ready = () => {
