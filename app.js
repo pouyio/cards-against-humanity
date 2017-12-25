@@ -1,10 +1,19 @@
 const express = require('express')
 const app = express();
-const http = require('http').Server(app);
-const io = require('socket.io')(http);
+const app2 = express();
+const fs = require('fs');
+const https = require('https');
+const http = require('http');
+const options = {
+                key: fs.readFileSync('/etc/letsencrypt/live/comic/privkey.pem'),
+                cert: fs.readFileSync('/etc/letsencrypt/live/comic/fullchain.pem')
+        }
+const server2 = http.createServer(app2);
+const server = https.createServer(options, app);
+const io = require('socket.io').listen(server);
 const raw = require('./data.json');
 raw.blackCards = raw.blackCards.filter(e => e.pick === 1);
-const PORT = 8080;
+const PORT = 8083;
 
 const _getRandomCards = (type, number) => {
     const _card = () => raw[type][Math.floor(Math.random() * raw[type].length)];
@@ -15,6 +24,10 @@ const _getRandomCards = (type, number) => {
         return Array(10).fill(1).map(_card);
     }
 }
+
+app2.use('*', (req, res) => {
+  res.redirect('https://' + req.headers.host + ':' + PORT);
+});
 
 app.use(express.static('.'))
 app.get('/', (req, res) => res.sendFile(__dirname + '/index.html'));
@@ -121,4 +134,5 @@ io.on('connection', (socket) => {
 
 });
 
-http.listen(PORT, () => console.log('listening on port: ', PORT));
+server.listen(PORT, () => console.log(`Comics-api listening on port ${PORT}!`));
+server2.listen(80);
