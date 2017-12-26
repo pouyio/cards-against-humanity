@@ -11,29 +11,56 @@ const $ready = document.getElementById('ready');
 const $panel = document.getElementById('gamePanel');
 
 
+class App extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+
+    render() {
+        return <Form hidden={false} />;
+    }
+}
+
+
 class Form extends React.Component {
 
+    constructor(props) {
+        super(props);
+        this.state = {
+            hidden: this.props.hidden,
+            nick: '',
+            room: ''
+        }
+
+    }
+
     enterRoom() {
-        const roomText = $room.value;
+        const roomText = this.state.room;
         const $roomInfo = document.getElementById('roomInfo');
-        socket.emit('enter-room', $nick.value, roomText);
+        socket.emit('enter-room', this.state.nick, roomText);
         $form.hidden = true;
         $roomInfo.innerHTML = `Room: ${roomText}`;
         $roomInfo.hidden = false;
         $ready.hidden = false;
     }
 
+    handleChange(e, type) {
+        this.setState({ [type]: e.target.value})
+    }
+
 
     render() {
-        return <div id="form" hidden={this.props.hidden}>
-            <input placeholder="Nick" id="nick" />
-            <input placeholder="Room" id="room" />
-            <button onClick={this.enterRoom}>Enter</button>
+        return <div hidden={this.state.hidden}>
+            <input placeholder="Nick" value={this.state.nick} onChange={(e) => this.handleChange(e, 'nick')}/>
+            <input placeholder="Room" value={this.state.room} onChange={(e) => this.handleChange(e, 'room')}/>
+            <button onClick={(e) => this.enterRoom(e)}>Enter</button>
+            <pre>{this.state.nick}</pre>
+            <pre>{this.state.room}</pre>
         </div>
     }
 }
 
-ReactDOM.render(<Form />, document.getElementById('app'));
+ReactDOM.render(<App />, document.getElementById('app'));
 
 const checkSession = () => {
     const nick = localStorage.getItem('nick') || false;
