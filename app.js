@@ -91,6 +91,28 @@ io.on('connection', (socket) => {
         socket.human = { nick, counter: 0, isLeader: false, id: socket.id, room };
         socket.emit('just-connected', socket.id, nick, room);
         io.to(room).emit('enter-room', _getHumans(room));
+
+        if (!socket.adapter.rooms[room].roomStarted) {
+            socket.adapter.rooms[room].roomStarted = true;
+            socket.adapter.rooms[room].blackCard = _newRound(room);
+        } else {
+            io.to(socket.id).emit('new-round', socket.adapter.rooms[socket.human.room].blackCard, _getHumans(room));
+        }
+
+    });
+
+    socket.on('leave-room', (nick, room) => {
+        socket.leave(room);
+        if (!socket.human) return;
+
+        const humans = _getHumans(socket.human.room).filter(h => h.id !== socket.id);
+
+        io.to(socket.human.room).emit('leave-room', humans);
+        if (socket.human.isLeader) {
+            const room = socket.adapter.rooms[socket.human.room];
+            if(room) room.blackCard = _newRound(socket.human.room);
+        }
+
     });
 
     socket.on('disconnecting', () => {
@@ -101,21 +123,14 @@ io.on('connection', (socket) => {
 
         io.to(socket.human.room).emit('leave-room', humans);
         if (socket.human.isLeader) {
-            socket.adapter.rooms[socket.human.room].blackCard = _newRound(socket.human.room);
+            const room = socket.adapter.rooms[socket.human.room];
+            if(room) room.blackCard = _newRound(socket.human.room);
         }
 
     });
 
     socket.on('ready', () => {
-        socket.human.ready = true;
-        const room = socket.human.room;
-        const humans = _getHumans(room);
-        if (!socket.adapter.rooms[room].roomStarted) {
-            socket.adapter.rooms[room].roomStarted = true;
-            socket.adapter.rooms[room].blackCard = _newRound(room);
-        } else {
-            io.to(socket.id).emit('new-round', socket.adapter.rooms[socket.human.room].blackCard, humans);
-        }
+        
     });
 
     socket.on('card-selected', (cardId, cardtext) => {
