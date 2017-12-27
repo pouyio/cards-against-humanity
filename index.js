@@ -1,15 +1,4 @@
 const socket = io();
-let humans = [];
-let leader;
-let myId;
-let whiteCards = [];
-const blackCard = document.getElementById('blackCard');
-const $room = document.getElementById('room');
-const $nick = document.getElementById('nick');
-const $form = document.getElementById('form');
-const $ready = document.getElementById('ready');
-const $panel = document.getElementById('gamePanel');
-
 
 class App extends React.Component {
 
@@ -26,7 +15,9 @@ class App extends React.Component {
         if (this.state.room && this.state.nick) socket.emit('enter-room', this.state.nick, this.state.room);
 
         socket.on('enter-room', (humans) => this._updateHumans(humans));
+        
         socket.on('leave-room', (humans) => this._updateHumans(humans));
+
         socket.on('just-connected', (id, nick, room) => {
             localStorage.setItem('nick', nick);
             localStorage.setItem('room', room);
@@ -34,18 +25,30 @@ class App extends React.Component {
         });
 
         socket.on('new-round', async (blackCard, humans) => {
-            this.setState({ blackCard, humans });
+            this.setState({ blackCard, humans, selectedCard: {} });
             const res = await (await fetch(`/card/${10 - this.state.whiteCards.length}`)).json();
             this.setState((prevState) => ({whiteCards: prevState.whiteCards.concat(res.cards)}))
         });
 
-        socket.on('card-selected', (_cardId, cardtext, _friendNick) => {
-            console.log(_cardId, cardtext, _friendNick)
+        socket.on('card-selected', (_cardId, cardtext, _friendNick, humanId) => {
+            this.setState((prevState) => {
+                const index = prevState.humans.findIndex(h => h.id === humanId);
+                prevState.humans[index].response = cardtext;
+                return prevState;
+            })
         })
+
+        socket.on('you-won', () => alert('YOU WON THIS ROUND!'));
     }
 
     _updateHumans(humans) {
-        this.setState({ humans });
+        this.setState((prevState) => {
+            const newHumans = humans.reduce((acc, human) => {
+                const humanFound = prevState.humans.find(h => h.id === human.id)
+                return humanFound ? acc.concat([humanFound]) : acc.concat([human]);
+            }, []);
+            return { humans: newHumans };
+        });
     }
 
     onEnter(values) {
@@ -63,8 +66,12 @@ class App extends React.Component {
     }
 
     onSelected(card) {
-        this.setState({selectedCard: card})
+        this.setState(prevState => ({whiteCards: prevState.whiteCards.filter(c => c.id !== card.id)}));
         socket.emit('card-selected', card.id, card.text);
+    }
+
+    onWinner(id) {
+        socket.emit('round-win', id);
     }
 
     render() {
@@ -76,11 +83,11 @@ class App extends React.Component {
             <div>
                 <Login isLoged={isLoged} onEnter={e => this.onEnter(e)} onLeave={e => this.onLeave()} />
                 {this.state.room && <Room room={this.state.room} />}
-                {isLoged && <HumanList myId={this.state.myId} humans={this.state.humans} />}
+                {isLoged && <HumanList myId={this.state.myId} humans={this.state.humans} onWinner={id => this.onWinner(id)}/>}
                 {isLoged && <Question 
                                 disabled={isLeader || this.state.selectedCard.id}
                                 blackCard={this.state.blackCard}
-                                whiteCards={this.state.whiteCards.filter(c => c.id !== this.state.selectedCard.id)}
+                                whiteCards={this.state.whiteCards}
                                 onSelected={card => this.onSelected(card)}/>}
             </div>
         );
@@ -122,7 +129,6 @@ class Login extends React.Component {
                 <input placeholder="Nick" value={this.state.nick} onChange={e => this.handleChange(e, 'nick')} />
                 <input placeholder="Room" value={this.state.room} onChange={e => this.handleChange(e, 'room')} />
                 <button className="btn" onClick={e => this.enter(e)}>Enter</button>
-                <button className="btn" onClick={e => this.leave(e)}>Leave</button>
             </div>
         }
         return render;
@@ -144,11 +150,17 @@ class Room extends React.Component {
 
 class HumanList extends React.Component {
 
+    onWinner(id) {
+        this.props.onWinner(id);
+    }
+
     render() {
+        const leader = this.props.humans.find(h => h.isLeader);
+        const imLeader = leader && leader.id === this.props.myId;
         return (
             <ul>
                 {this.props.humans.map(h => {
-                    return <Human key={h.id} human={h} me={this.props.myId === h.id} />
+                    return <Human key={h.id} human={h} imLeader={imLeader} me={this.props.myId === h.id} onWinner={id => this.onWinner(id)} />
                 })}
             </ul>
         )
@@ -159,14 +171,28 @@ class HumanList extends React.Component {
 
 class Human extends React.Component {
 
+    onSelected(humanId) {
+        this.props.onWinner(humanId);
+    }
+    
     render() {
         const icon = this.props.human.isLeader
             ? '👑'
             : this.props.me 
                 ? '🔵'
                 : '⚫️';
+
+        const judgeButton = this.props.imLeader && !this.props.me && this.props.human.response
+            ? <button onClick={e => this.onSelected(this.props.human.id)} className="btn"> 🦄 Win</button>
+            : null;
+
+        const safeResponse = {__html: sanitizeHtml(this.props.human.response || '')};
         return (
-            <li> {`${icon} ${this.props.human.nick}: ${this.props.human.counter}`} </li>
+            <li>
+                {`${icon} ${this.props.human.nick}: ${this.props.human.counter} `}
+                <span  dangerouslySetInnerHTML={safeResponse}/>
+                {judgeButton} 
+            </li>
         )
     }
 
@@ -174,17 +200,14 @@ class Human extends React.Component {
 
 class Question extends React.Component {
 
-    onSelected(id) {
-        const card = this.props.whiteCards.find(c => c.id === id);
-        this.props.onSelected(card);
-    }
-
     render() {
+        const isDisabled = this.props.whiteCards.length < 10;
+        const questionText = this.props.blackCard.replace(/\s*_\s*/, ' ______ ');
         return (
             <div>
-                <h1>{this.props.blackCard}</h1>
-                <ul className={this.props.disabled ? 'disabled': ''}>
-                    {this.props.whiteCards.map(c => <WhiteCard key={c.id} id={c.id} text={c.text} onSelected={id => this.onSelected(id)}/>)}
+                <h1 dangerouslySetInnerHTML={{__html: sanitizeHtml(questionText)}}></h1>
+                <ul className={this.props.disabled || isDisabled ? 'disabled': ''}>
+                    {this.props.whiteCards.map((c, i) => <WhiteCard key={`${c.id}-${i}`} card={c} onSelected={card => this.props.onSelected(card)}/>)}
                 </ul>
             </div>
         )
@@ -195,142 +218,13 @@ class Question extends React.Component {
 
 class WhiteCard extends React.Component {
 
-    onSelected() {
-        this.props.onSelected(this.props.id);
-    }
-
     render() {
-        return <li><button onClick={e => this.onSelected()} className="btn">{this.props.text}</button></li>
+        return <li><button
+                onClick={e => this.props.onSelected(this.props.card)}
+                className="btn"
+                dangerouslySetInnerHTML={{__html: sanitizeHtml(this.props.card.text)}}></button></li>
     }
 
 }
 
 ReactDOM.render(<App />, document.getElementById('app'));
-
-const checkSession = () => {
-    const nick = localStorage.getItem('nick') || false;
-    const room = localStorage.getItem('room') || false;
-
-    if (!nick || !room) {
-        $form.hidden = false;
-    } else {
-        const $roomInfo = document.getElementById('roomInfo');
-        $roomInfo.innerHTML = `Room: ${room}`;
-        $form.hidden = true;
-        $roomInfo.hidden = false;
-        $ready.hidden = false;
-        socket.emit('enter-room', nick, room);
-    }
-}
-
-const leaveRoom = () => {
-    localStorage.clear();
-    location.reload();
-}
-
-const humanPlus = event => socket.emit('round-win', event.target.dataset.id);
-
-const _updateHumans = (_friends) => {
-    humans = _friends;
-    leader = humans.find(h => h.isLeader);
-    const ul = document.getElementById('humans');
-    ul.innerHTML = '';
-    humans.forEach(human => {
-        const node = document.createElement('LI');
-        node.style.fontSize = human.id === myId ? 'larger' : 'inherit';
-        node.style.fontWeight = human.id === myId ? 'bold' : 'inherit';
-        let textnode = document.createTextNode(`${human.id === myId ? '🔵' : '⚫️'}️ ${human.nick} : ${human.counter}`);
-
-        if (leader && (leader.id === human.id)) {
-            textnode = document.createTextNode(`👑 ${human.nick} : ${human.counter}`);
-        }
-        node.appendChild(textnode);
-
-        if (leader && leader.id === myId && human.id !== myId) {
-            const nodePlus = document.createElement('BUTTON');
-            const textPlus = document.createTextNode(' 🦄 Win');
-            nodePlus.dataset.id = human.id;
-            nodePlus.dataset.nick = human.nick;
-            nodePlus.onclick = humanPlus;
-            nodePlus.appendChild(textPlus);
-            node.appendChild(nodePlus);
-        }
-
-        ul.appendChild(node);
-    });
-}
-
-const selectCard = async event => {
-    const cardId = event.target.dataset.id;
-    const cardtext = event.target.dataset.cardtext;
-    const cardLIToRemove = document.querySelector(`[data-id~="${cardId}"]`).parentNode;
-    cardLIToRemove.parentNode.removeChild(cardLIToRemove);
-    socket.emit('card-selected', cardId, cardtext);
-    whiteCards = whiteCards.filter(c => c.id !== cardId);
-
-    document.getElementById('whiteCards').classList.add('disabled');
-}
-
-
-const _paintWhiteCards = () => {
-    const ul = document.getElementById('whiteCards');
-    ul.innerHTML = '';
-    whiteCards.forEach((whiteCard) => {
-        const nodeLi = document.createElement('LI');
-        const nodeBtn = document.createElement('BUTTON');
-        const btnnode = document.createTextNode(whiteCard.text);
-        nodeBtn.dataset.id = whiteCard.id;
-        nodeBtn.dataset.cardtext = whiteCard.text;
-        nodeBtn.onclick = selectCard;
-        nodeBtn.appendChild(btnnode);
-        nodeLi.appendChild(nodeBtn);
-        ul.appendChild(nodeLi);
-    });
-}
-
-const ready = () => {
-    socket.emit('ready');
-    $ready.hidden = true;
-    $panel.hidden = false;
-}
-
-// socket.on('enter-room', _updateHumans);
-// socket.on('leave-room', _updateHumans);
-socket.on('just-connected', (id, nick, room) => {
-    myId = id;
-    localStorage.setItem('nick', nick);
-    localStorage.setItem('room', room);
-});
-
-// socket.on('new-round', async (_blackCard, _humans) => {
-//     humans = _humans;
-//     _updateHumans(humans);
-//     blackCard.innerHTML = _blackCard;
-//     leader = humans.find(h => h.isLeader);
-//     const ul = document.getElementById('selectedCards');
-//     ul.innerHTML = '';
-//     if (leader && (leader.id === myId)) {
-//         document.getElementById('whiteCards').classList.add('disabled');
-//         document.getElementById('selectedCards').attributes.hidden = false;
-//     } else {
-//         document.getElementById('whiteCards').classList.remove('disabled');
-//         document.getElementById('selectedCards').attributes.hidden = true;
-//     }
-
-//     const totalCards = 10 - whiteCards.length;
-//     const res = await (await fetch(`/card/${totalCards}`)).json();
-//     whiteCards = whiteCards.concat(res.cards);
-//     _paintWhiteCards();
-// });
-
-// socket.on('you-won', () => alert('YOU WON THIS ROUND!'));
-
-// socket.on('card-selected', (_cardId, cardtext, _friendNick) => {
-//     const ul = document.getElementById('selectedCards');
-//     const nodeCard = document.createElement('LI');
-//     const textCard = document.createTextNode(`${_friendNick} - ${cardtext}`);
-//     nodeCard.appendChild(textCard);
-//     ul.appendChild(nodeCard);
-// });
-
-// checkSession();
