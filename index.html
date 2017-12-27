@@ -4,6 +4,7 @@
 <head>
     <title>CAH 💩</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 
@@ -11,13 +12,11 @@
     
     <div id="app"></div>
 
-    <div id="form"></div>
-
     <!-- <div id="form" hidden>
         <input placeholder="Nick" id="nick" />
         <input placeholder="Room" id="room" />
         <button onclick="enterRoom()">Enter</button>
-    </div> -->
+    </div>
 
     <div id="ready" hidden>
         <p id="readyText">Im ready!</p>
@@ -35,12 +34,13 @@
         <ul id="whiteCards"></ul>
         
         <ul id="selectedCards"></ul>
-    </div>
+    </div> -->
 
     <script src="/socket.io/socket.io.js"></script>
     <script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/babel-core@5.8.38/browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/6.26.0/polyfill.min.js"></script>
     <script src="/index.js" type="text/babel"></script>
 </body>
 
