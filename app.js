@@ -81,14 +81,15 @@ const _newRound = (room) => {
 }
 
 const _updateCounter = (humanId, amount) => {
-    io.sockets.connected[humanId].human.counter += amount;
+    const newCount = +io.sockets.connected[humanId].human.counter + amount;
+    io.sockets.connected[humanId].human.counter = newCount;
 }
 
 io.on('connection', (socket) => {
 
-    socket.on('enter-room', (nick, room) => {
+    socket.on('enter-room', (nick, room, counter = 0) => {
         socket.join(room);
-        socket.human = { nick, counter: 0, isLeader: false, id: socket.id, room };
+        socket.human = { nick, counter, room, isLeader: false, id: socket.id };
         socket.emit('just-connected', socket.id, nick, room);
         io.to(room).emit('enter-room', _getHumans(room));
 
@@ -137,7 +138,8 @@ io.on('connection', (socket) => {
 
     socket.on('round-win', (humanId) => {
         _updateCounter(humanId, 1);
-        io.to(humanId).emit('you-won');
+        const points = _getHumans(socket.human.room, humanId).counter;
+        io.to(humanId).emit('you-won', points);
         socket.adapter.rooms[socket.human.room].blackCard = _newRound(socket.human.room);
     });
 

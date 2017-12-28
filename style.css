@@ -1,4 +1,41 @@
+html, body {
+    font-family: 'Roboto', sans-serif;
+    white-space: inherit;
+}
+
+.pointer {
+    cursor: pointer;
+}
+
+.bold {
+    font-weight: bold;
+}
+
 .disabled{
     pointer-events:none;
     opacity:0.4;
 }
+
+.bg-king {
+    background-color: hsla(41, 66%, 52%, 0.7);
+}
+
+.btn-outline-dark {
+    background-color: white;
+}
+
+html {
+    font-size: 1rem;
+  }
+  
+  @media (min-width: 576px)  {
+    html {
+      font-size: 1.1rem;
+    }
+  }
+  
+  @media (min-width: 768px) {
+    html {
+      font-size: 1.2rem;
+    }
+  }
