@@ -129,10 +129,6 @@ io.on('connection', (socket) => {
 
     });
 
-    socket.on('ready', () => {
-        
-    });
-
     socket.on('card-selected', (cardId, cardtext) => {
         io
             .to(_getHumans(socket.human.room, 'leader').id)
