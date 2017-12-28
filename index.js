@@ -1,5 +1,8 @@
 const socket = io();
 
+const getBiggerEmoji = (emoji) => <span style={{ transform: 'scale(1.4)', display: 'inline-block' }}>{emoji}</span>;
+const getBeatingEmoji = (emoji) => <span style={{ display: 'inline-block' }} className="beat-forever">{getBiggerEmoji(emoji)}</span>
+
 class App extends React.Component {
 
     constructor(props) {
@@ -31,7 +34,8 @@ class App extends React.Component {
                 blackCard,
                 humans,
                 selectedCard: {},
-                whiteCards: prevState.whiteCards.concat(res.cards) }))
+                whiteCards: prevState.whiteCards.concat(res.cards)
+            }))
         });
 
         socket.on('card-selected', (_cardId, cardtext, _friendNick, humanId) => {
@@ -66,6 +70,8 @@ class App extends React.Component {
         socket.emit('leave-room', this.state.nick, this.state.room);
         localStorage.clear();
         this.setState({ nick: false, room: false });
+        // REMOVE THIS SHIT destroying socket global variable and putting it inside the state
+        location.reload();
     }
 
     onSelected(card) {
@@ -80,10 +86,8 @@ class App extends React.Component {
     render() {
         const isLoged = this.state.nick && this.state.room;
         const leader = this.state.humans.find(h => h.isLeader);
-        const isLeader = leader && leader.id === this.state.myId;
+        const imLeader = leader && leader.id === this.state.myId;
         const classNames = `d-flex flex-column ${isLoged ? '' : ' justify-content-center'}`;
-
-        const columnOrder = `d-flex flex-column${isLeader ? '-reverse' : ''}`
 
         return (
             <div className={classNames} style={{ minHeight: '100vh' }}>
@@ -98,17 +102,24 @@ class App extends React.Component {
                                     <Logout onLeave={e => this.onLeave()} />
                                 </div>
 
-                                <div className={columnOrder}>
-                                    <HumanList
-                                        myId={this.state.myId}
-                                        humans={this.state.humans}
-                                        onWinner={id => this.onWinner(id)} />
+                                <div className="d-flex flex-column">
+
+                                    {!imLeader &&
+                                        <HumanList
+                                            myId={this.state.myId}
+                                            humans={this.state.humans} />}
 
                                     <Question
-                                        disabled={isLeader || this.state.selectedCard.id}
+                                        disabled={imLeader || this.state.selectedCard.id}
                                         blackCard={this.state.blackCard}
                                         whiteCards={this.state.whiteCards}
                                         onSelected={card => this.onSelected(card)} />
+
+                                    {imLeader &&
+                                        <HumanDashboard
+                                            myId={this.state.myId}
+                                            humans={this.state.humans}
+                                            onWinner={id => this.onWinner(id)} />}
 
                                 </div>
                             </div>
@@ -186,23 +197,45 @@ class Room extends React.Component {
 
 }
 
-class HumanList extends React.Component {
+class HumanDashboard extends React.Component {
 
     onWinner(id) {
         this.props.onWinner(id);
     }
 
     render() {
-        const leader = this.props.humans.find(h => h.isLeader);
-        const imLeader = leader && leader.id === this.props.myId;
+        const theRest = this.props.humans.filter(h => h.id !== this.props.myId);
+
         return (
-            <div className="">
-                <ul className="list-group d-flex">
-                    {this.props.humans.map(h => {
-                        return <Human key={h.id} human={h} imLeader={imLeader} me={this.props.myId === h.id} onWinner={id => this.onWinner(id)} />
-                    })}
-                </ul>
-            </div>
+            <ul className="list-group">
+                {theRest.map(h => {
+                    return <Human key={h.id} human={h} onWinner={id => this.onWinner(id)} />
+                })}
+            </ul>
+        )
+
+    }
+
+}
+
+class HumanList extends React.Component {
+
+    render() {
+        const me = this.props.humans.find(h => h.id === this.props.myId);
+        const theRest = this.props.humans.filter(h => h.id !== this.props.myId);
+
+        return (
+            <ul className="d-flex flex-wrap list-unstyled mb-0">
+                {me &&
+                    <li style={{ flex: '1 1 auto', margin: '1px' }} className={'p-1 rounded align-items-baseline bold text-center ' + (me.isLeader ? ' bg-king ' : ' bg-white')}>
+                        {getBiggerEmoji('💩')}  Me: <span className="badge badge-dark badge-pill">{me.counter}</span>
+                    </li>}
+
+                {theRest.map(h =>
+                    <li key={h.id} style={{ flex: '1 1 auto', margin: '1px' }} className={'p-1 rounded align-items-baseline text-center ' + (h.isLeader ? ' bg-king ' : ' bg-white')}>
+                        <div className="text-capitalize">{h.nick}: <span className="badge badge-dark badge-pill">{h.counter}</span></div>
+                    </li>)}
+            </ul>
         )
 
     }
@@ -215,31 +248,25 @@ class Human extends React.Component {
         this.props.onWinner(humanId);
     }
 
-    render() {        
-        const colorClass = this.props.human.isLeader ? ' bg-king ' : '';
+    render() {
 
-        const meClass = ' bold ';
         const responseClass = this.props.human.response ? '' : ' text-center ';
-
-        const judgeButton = this.props.imLeader && !this.props.me && this.props.human.response
-            ? <div className="btn btn-outline-dark d-block" onClick={e => this.onSelected(this.props.human.id)}><span style={{transform: 'scale(1.4)'}}>🦄</span> Winner <span style={{transform: 'scale(1.4)'}}>‼️</span></div>
-            : null;
 
         const safeResponse = { __html: sanitizeHtml(this.props.human.response || '') };
 
-        if(this.props.me) {
-            return <li className={'list-group-item ' + colorClass + meClass + responseClass}>
-                        <span className="d-inline-block" style={{transform: 'scale(1.4)'}}>💩</span> Me: {this.props.human.counter}
-                        {this.props.human.response && <span dangerouslySetInnerHTML={safeResponse} />}
-                    </li>
-        }else {
-            return  <li className={'list-group-item card ' + colorClass + responseClass}>
-                        <div className="text-capitalize">{this.props.human.nick}: {this.props.human.counter}
-                        </div>
-                        {this.props.human.response && <div className="card-body p-3" style={{fontStyle: 'italic'}} dangerouslySetInnerHTML={safeResponse} />}
-                        {judgeButton}
-                    </li>
-        }
+        const emojiTimer = <span className="rotate-forever" style={{ display: 'inline-block' }}>⏳</span>
+
+        return (
+            <li className={'list-group-item card ' + responseClass}>
+                <div className="text-capitalize small">{this.props.human.nick} {!this.props.human.response ? emojiTimer : ''}</div>
+                {this.props.human.response && <div className="card-body p-3" style={{ fontStyle: 'italic', fontSize: '1.2em' }} dangerouslySetInnerHTML={safeResponse} />}
+                {this.props.human.response &&
+                    <div className="btn btn-sm btn-outline-dark d-block" onClick={e => this.onSelected(this.props.human.id)}>
+                        {getBeatingEmoji('🦄')} Winner {getBeatingEmoji('‼️')}
+                    </div>
+                }
+            </li>
+        )
 
     }
 
@@ -252,17 +279,16 @@ class Question extends React.Component {
         const questionText = this.props.blackCard.replace(/\s*_\s*/, ' ______ ');
         const classes = `list-group list-group-flush  ${(this.props.disabled || isDisabled) ? 'disabled' : ''}`;
         return (
-            <div>
-
+            <div className="mb-3">
                 <div className="card bg-dark my-4">
                     <div className="card-body text-white">
                         <h1 className="h3" dangerouslySetInnerHTML={{ __html: sanitizeHtml(questionText) }}></h1>
                     </div>
                 </div>
-                    {!this.props.disabled &&
-                        <ul className={classes}>
-                            {this.props.whiteCards.map((c, i) => <WhiteCard key={`${c.id}-${i}`} card={c} onSelected={card => this.props.onSelected(card)} />)}
-                        </ul>}
+                {!this.props.disabled &&
+                    <ul className={classes}>
+                        {this.props.whiteCards.map((c, i) => <WhiteCard key={`${c.id}-${i}`} card={c} onSelected={card => this.props.onSelected(card)} />)}
+                    </ul>}
             </div>
         )
     }
@@ -275,8 +301,8 @@ class WhiteCard extends React.Component {
     render() {
         return <li className="btn btn-outline-dark pointer bold"
             onClick={e => this.props.onSelected(this.props.card)}
-            dangerouslySetInnerHTML={{ __html: sanitizeHtml(this.props.card.text) }} 
-            style={{whiteSpace: 'inherit'}}/>
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(this.props.card.text) }}
+            style={{ whiteSpace: 'inherit' }} />
     }
 
 }

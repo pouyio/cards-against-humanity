@@ -1,6 +1,42 @@
 html, body {
     font-family: 'Roboto', sans-serif;
     white-space: inherit;
+    font-size: 1rem;
+}
+
+.rotate-forever {
+    animation: rotate-me 7s linear infinite;
+}
+
+.beat-forever {
+    animation: beat-me .7s linear infinite;
+}
+  
+@keyframes rotate-me {
+    0% {
+        transform: rotate(0) scale(1.2);
+        
+    }
+    100% {
+        transform: rotate(-360deg) scale(1.2);
+    }
+}
+@keyframes beat-me {
+    0% {
+        transform: scale(1);
+    }
+    25% {
+        transform: rotate(2deg);
+    }
+    50% {
+        transform: scale(1.03)
+    }
+    75% {
+        transform: rotate(-2deg);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 .pointer {
@@ -23,10 +59,6 @@ html, body {
 .btn-outline-dark {
     background-color: white;
 }
-
-html {
-    font-size: 1rem;
-  }
   
   @media (min-width: 576px)  {
     html {
