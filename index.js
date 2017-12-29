@@ -91,16 +91,25 @@ class App extends React.Component {
 
         return (
             <div className={classNames} style={{ minHeight: '100vh' }}>
+
+                {isLoged &&
+                    <Room room={this.state.room} nick={this.state.nick}>
+                        <Logout onLeave={e => this.onLeave()} />
+                    </Room>
+                }
+
                 <div className="container">
                     <div className="row">
+
+                        {!isLoged &&
+                            <div className="col-12">
+                                <Login isLoged={isLoged} onEnter={e => this.onEnter(e)} />
+                            </div>
+                        }
 
                         {isLoged &&
 
                             <div className="col-12">
-                                <div className="d-flex justify-content-between">
-                                    <Room room={this.state.room} nick={this.state.nick} />
-                                    <Logout onLeave={e => this.onLeave()} />
-                                </div>
 
                                 <div className="d-flex flex-column">
 
@@ -124,11 +133,6 @@ class App extends React.Component {
                                 </div>
                             </div>
                         }
-                        {!isLoged &&
-                            <div className="col-12">
-                                <Login isLoged={isLoged} onEnter={e => this.onEnter(e)} />
-                            </div>
-                        }
 
                     </div>
                 </div>
@@ -141,7 +145,7 @@ class App extends React.Component {
 class Logout extends React.Component {
 
     render() {
-        return <button className="btn btn-link" onClick={e => this.props.onLeave()}>Leave</button>
+        return <button className="btn btn-sm btn-outline-light" onClick={e => this.props.onLeave()}>Leave ✈️</button>
     }
 
 }
@@ -189,10 +193,13 @@ class Login extends React.Component {
 class Room extends React.Component {
 
     render() {
-        return <div>
-            <button className="btn disabled btn-link">{this.props.nick}</button>
-            <button className="btn disabled btn-link">Room: {this.props.room}</button>
-        </div>
+        return <nav className="navbar bg-dark navbar-dark mb-3 justify-content-start" style={{ backgroundRepeat: 'repeat', fontWeight: '300' }}>
+            <div className="mr-auto">
+                <span className="navbar-text mx-2">{this.props.nick}</span>
+                <span className="navbar-text mx-2">Room: {this.props.room}</span>
+            </div>
+            {this.props.children}
+        </nav>
     }
 
 }
@@ -261,7 +268,7 @@ class Human extends React.Component {
                 <div className="text-capitalize small">{this.props.human.nick} {!this.props.human.response ? emojiTimer : ''}</div>
                 {this.props.human.response && <div className="card-body p-3" style={{ fontStyle: 'italic', fontSize: '1.2em' }} dangerouslySetInnerHTML={safeResponse} />}
                 {this.props.human.response &&
-                    <div className="btn btn-sm btn-outline-dark d-block" onClick={e => this.onSelected(this.props.human.id)}>
+                    <div className="btn btn-outline-dark d-block" onClick={e => this.onSelected(this.props.human.id)}>
                         {getBeatingEmoji('🦄')} Winner {getBeatingEmoji('‼️')}
                     </div>
                 }
@@ -299,7 +306,7 @@ class Question extends React.Component {
 class WhiteCard extends React.Component {
 
     render() {
-        return <li className="btn btn-outline-dark pointer bold"
+        return <li className="btn btn-outline-dark pointer bold py-3"
             onClick={e => this.props.onSelected(this.props.card)}
             dangerouslySetInnerHTML={{ __html: sanitizeHtml(this.props.card.text) }}
             style={{ whiteSpace: 'inherit' }} />
