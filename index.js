@@ -48,7 +48,7 @@ class App extends React.Component {
 
         socket.on('you-won', (human) => {
             localStorage.setItem('counter', human.counter);
-            const msg = (this.state.myId === human.id) ? `🎊 You won! 🎉` : `${human.nick}: won 😒`;
+            const msg = (this.state.myId === human.id) ? `🎊 You win 🎉` : `👎🏻 ${human.nick} won... 😒`;
             alert(msg);
         });
     }
@@ -99,6 +99,8 @@ class App extends React.Component {
                     </Room>
                 }
 
+                {imLeader && <Ribbon />}
+
                 <div className="container">
                     <div className="row">
 
@@ -137,8 +139,19 @@ class App extends React.Component {
 
                     </div>
                 </div>
+
             </div>
         );
+    }
+
+}
+
+class Ribbon extends React.Component {
+
+    render() {
+        return <div className="text-center text-white" style={{ position: 'fixed', transform: 'rotate(-45deg)', width: '300px', bottom: '48px', right: '-83px', border: '2px solid goldenrod', backgroundColor: 'darkgoldenrod', fontSize: '1.2em' }}>
+            <span> LEADER </span>
+        </div>
     }
 
 }
@@ -146,7 +159,7 @@ class App extends React.Component {
 class Logout extends React.Component {
 
     render() {
-        return <button className="btn btn-sm btn-outline-light" onClick={e => this.props.onLeave()}>Leave ✈️</button>
+        return <button className="btn btn-sm btn-outline-light py-1" onClick={e => this.props.onLeave()}>Leave ✈️</button>
     }
 
 }
@@ -196,8 +209,8 @@ class Room extends React.Component {
     render() {
         return <nav className="navbar bg-dark navbar-dark mb-3 justify-content-start" style={{ backgroundRepeat: 'repeat', fontWeight: '300' }}>
             <div className="mr-auto">
-                <span className="navbar-text mx-2">{this.props.nick}</span>
-                <span className="navbar-text mx-2">Room: {this.props.room}</span>
+                <span className="navbar-text mx-2 py-1">{this.props.nick}</span>
+                <span className="navbar-text mx-2 py-1">Room: {this.props.room}</span>
             </div>
             {this.props.children}
         </nav>
@@ -266,7 +279,7 @@ class Human extends React.Component {
 
         return (
             <li className={'list-group-item card ' + responseClass}>
-                <div className="text-capitalize small">{this.props.human.nick} {!this.props.human.response ? emojiTimer : ''}</div>
+                <div className={'text-capitalize' + (this.props.human.response ? ' small' : '')}>{this.props.human.nick} {!this.props.human.response ? emojiTimer : ''}</div>
                 {this.props.human.response && <div className="card-body p-3" style={{ fontStyle: 'italic', fontSize: '1.2em' }} dangerouslySetInnerHTML={safeResponse} />}
                 {this.props.human.response &&
                     <div className="btn btn-outline-dark d-block" onClick={e => this.onSelected(this.props.human.id)}>
