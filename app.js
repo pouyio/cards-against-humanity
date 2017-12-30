@@ -25,7 +25,7 @@ const _getRandomCards = (type, number) => {
     }
 }
 
-app2.use('*', (req, res) => res.redirect(`https:// ${req.headers.host}:${PORT}`));
+app2.use('*', (req, res) => res.redirect(`https://${req.headers.host}:${PORT}`));
 
 app.use(express.static('.'))
 app.get('/', (req, res) => res.sendFile(__dirname + '/index.html'));
