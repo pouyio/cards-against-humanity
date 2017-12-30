@@ -138,8 +138,8 @@ io.on('connection', (socket) => {
 
     socket.on('round-win', (humanId) => {
         _updateCounter(humanId, 1);
-        const points = _getHumans(socket.human.room, humanId).counter;
-        io.to(humanId).emit('you-won', points);
+        const winner = _getHumans(socket.human.room, humanId);
+        socket.to(socket.human.room).emit('you-won', winner);
         socket.adapter.rooms[socket.human.room].blackCard = _newRound(socket.human.room);
     });
 

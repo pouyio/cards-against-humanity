@@ -46,9 +46,10 @@ class App extends React.Component {
             })
         })
 
-        socket.on('you-won', (newCount) => {
-            localStorage.setItem('counter', newCount);
-            alert(`You won this round!`);
+        socket.on('you-won', (human) => {
+            localStorage.setItem('counter', human.counter);
+            const msg = (this.state.myId === human.id) ? `🎊 You won! 🎉` : `${human.nick}: won 😒`;
+            alert(msg);
         });
     }
 
