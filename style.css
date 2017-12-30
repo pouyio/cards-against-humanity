@@ -5,6 +5,10 @@ html, body {
     background: url(/pattern.png);
 }
 
+#app {
+    user-select: none;
+}
+
 .rotate-forever {
     animation: rotate-me 7s linear infinite;
 }
