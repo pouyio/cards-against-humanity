@@ -1,0 +1,11 @@
+.Ribbon { 
+    position: fixed;
+    transform: rotate(-45deg);
+    width: 300px;
+    bottom: 48px;
+    right: -83px;
+    border: 2px solid goldenrod;
+    background-color: darkgoldenrod;
+    font-size: 1.2em;
+    z-index: 10;
+}
