@@ -1,3 +1,7 @@
+// TODO
+// pasar a CRA
+// añadir react alerts http://react-s-alert.jsdemo.be/
+// recordar username on login
 const socket = io();
 
 const getBiggerEmoji = (emoji) => <span style={{ transform: 'scale(1.4)', display: 'inline-block' }}>{emoji}</span>;
@@ -114,7 +118,7 @@ class App extends React.Component {
 
                             <div className="col-12">
 
-                                <div className="d-flex flex-column">
+                                <div className="d-flex flex-column py-3">
 
                                     {!imLeader &&
                                         <HumanList
@@ -149,7 +153,7 @@ class App extends React.Component {
 class Ribbon extends React.Component {
 
     render() {
-        return <div className="text-center text-white" style={{ position: 'fixed', transform: 'rotate(-45deg)', width: '300px', bottom: '48px', right: '-83px', border: '2px solid goldenrod', backgroundColor: 'darkgoldenrod', fontSize: '1.2em' }}>
+        return <div className="text-center text-white ribbon">
             <span> LEADER </span>
         </div>
     }
@@ -207,7 +211,7 @@ class Login extends React.Component {
 class Room extends React.Component {
 
     render() {
-        return <nav className="navbar bg-dark navbar-dark mb-3 justify-content-start" style={{ backgroundRepeat: 'repeat', fontWeight: '300' }}>
+        return <nav className="navbar bg-dark navbar-dark justify-content-start" style={{ backgroundRepeat: 'repeat', fontWeight: '300' }}>
             <div className="mr-auto">
                 <span className="navbar-text mx-2 py-1">{this.props.nick}</span>
                 <span className="navbar-text mx-2 py-1">Room: {this.props.room}</span>
@@ -229,9 +233,11 @@ class HumanDashboard extends React.Component {
 
         return (
             <ul className="list-group">
-                {theRest.map(h => {
-                    return <Human key={h.id} human={h} onWinner={id => this.onWinner(id)} />
-                })}
+                {!!theRest.length && theRest.map(h => <Human key={h.id} human={h} onWinner={id => this.onWinner(id)} />)}
+
+                {!theRest.length &&
+                    <li className="list-group-item text-center h3"><i> ⚡️ No players yet ⚡️ </i></li>
+                }
             </ul>
         )
 
@@ -246,7 +252,7 @@ class HumanList extends React.Component {
         const theRest = this.props.humans.filter(h => h.id !== this.props.myId);
 
         return (
-            <ul className="d-flex flex-wrap list-unstyled mb-0">
+            <ul className="d-flex flex-wrap list-unstyled">
                 {me &&
                     <li style={{ flex: '1 1 auto', margin: '1px' }} className={'p-1 rounded align-items-baseline bold text-center ' + (me.isLeader ? ' bg-king ' : ' bg-white')}>
                         {getBiggerEmoji('💩')}  Me: <span className="badge badge-dark badge-pill">{me.counter}</span>
@@ -300,10 +306,10 @@ class Question extends React.Component {
         const questionText = this.props.blackCard.replace(/\s*_\s*/, ' ______ ');
         const classes = `list-group list-group-flush  ${(this.props.disabled || isDisabled) ? 'disabled' : ''}`;
         return (
-            <div className="mb-3">
-                <div className="card bg-dark my-4">
+            <div>
+                <div className="card bg-dark mb-3">
                     <div className="card-body text-white">
-                        <h1 className="h3" dangerouslySetInnerHTML={{ __html: sanitizeHtml(questionText) }}></h1>
+                        <h1 className="h4" dangerouslySetInnerHTML={{ __html: sanitizeHtml(questionText) }}></h1>
                     </div>
                 </div>
                 {!this.props.disabled &&
