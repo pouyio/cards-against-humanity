@@ -1,7 +1,7 @@
 // TODO
+// recordar username on login
 // pasar a CRA
 // añadir react alerts http://react-s-alert.jsdemo.be/
-// recordar username on login
 const socket = io();
 
 const getBiggerEmoji = (emoji) => <span style={{ transform: 'scale(1.4)', display: 'inline-block' }}>{emoji}</span>;
@@ -13,7 +13,7 @@ class App extends React.Component {
         super(props);
         this.state = {
             room: localStorage.getItem('room') || false,
-            nick: localStorage.getItem('nick') || false,
+            nick: localStorage.getItem('nick') || '',
             counter: localStorage.getItem('counter') || 0,
             humans: [],
             blackCard: '',
@@ -26,10 +26,10 @@ class App extends React.Component {
 
         socket.on('leave-room', (humans) => this._updateHumans(humans));
 
-        socket.on('just-connected', (id, nick, room) => {
+        socket.on('just-connected', (myId, nick, room) => {
             localStorage.setItem('nick', nick);
             localStorage.setItem('room', room);
-            this.setState({ nick, room, myId: id });
+            this.setState({ nick, room, myId });
         });
 
         socket.on('new-round', async (blackCard, humans) => {
@@ -73,8 +73,9 @@ class App extends React.Component {
 
     onLeave(event) {
         socket.emit('leave-room', this.state.nick, this.state.room);
-        localStorage.clear();
-        this.setState({ nick: false, room: false });
+        localStorage.removeItem('room');
+        localStorage.removeItem('counter');
+        this.setState({ room: false });
         // REMOVE THIS SHIT destroying socket global variable and putting it inside the state
         location.reload();
     }
@@ -110,7 +111,7 @@ class App extends React.Component {
 
                         {!isLoged &&
                             <div className="col-12">
-                                <Login isLoged={isLoged} onEnter={e => this.onEnter(e)} />
+                                <Login nick={this.state.nick} onEnter={e => this.onEnter(e)} />
                             </div>
                         }
 
@@ -172,7 +173,7 @@ class Login extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            nick: '',
+            nick: this.props.nick,
             room: '1'
         }
     }
@@ -186,6 +187,7 @@ class Login extends React.Component {
     }
 
     enter() {
+        if(!this.state.nick) return;
         this.props.onEnter(this.state);
     }
 
