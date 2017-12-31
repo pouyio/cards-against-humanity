@@ -8,7 +8,7 @@ import HumanDashboard from './components/HumanDashboard.js';
 import Login from './components/Login.js';
 import Logout from './components/Logout.js';
 import openSocket from 'socket.io-client';
-const socket = openSocket('http://localhost:8083');
+const socket = openSocket();
 
 class App extends Component {
 
