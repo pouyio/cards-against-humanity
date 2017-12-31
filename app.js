@@ -27,8 +27,8 @@ const _getRandomCards = (type, number) => {
 
 app2.use('*', (req, res) => res.redirect(`https://${req.headers.host}:${PORT}`));
 
-app.use(express.static('.'))
-app.get('/', (req, res) => res.sendFile(__dirname + '/index.html'));
+app.use(express.static(path.join(__dirname, 'client/build')));
+
 app.get('/card/:number', (req, res) => {
     const cards = new Array(+req.params.number).fill(1).map(c => {
         const cardText = _getRandomCards('whiteCards', 1);
@@ -36,6 +36,8 @@ app.get('/card/:number', (req, res) => {
     });
     res.json({ cards });
 })
+
+app.get('*', (req, res) => res.sendFile(path.join(__dirname + '/client/build/index.html')));
 
 const _getHumans = (room, id = false) => {
     const humans = [];

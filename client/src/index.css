@@ -1,0 +1,80 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto:100i,300,400,700,900');
+
+html, body {
+  font-family: 'Roboto', sans-serif;
+  white-space: inherit;
+  font-size: .89rem;
+  background: url(/pattern.png);
+}
+
+#root {
+  user-select: none;
+}
+
+.rotate-forever {
+  animation: rotate-me 7s linear infinite;
+}
+
+.beat-forever {
+  animation: beat-me .7s linear infinite;
+}
+
+@keyframes rotate-me {
+  0% {
+      transform: rotate(0) scale(1.2);
+      
+  }
+  100% {
+      transform: rotate(-360deg) scale(1.2);
+  }
+}
+@keyframes beat-me {
+  0% {
+      transform: scale(1);
+  }
+  25% {
+      transform: rotate(2deg);
+  }
+  50% {
+      transform: scale(1.03)
+  }
+  75% {
+      transform: rotate(-2deg);
+  }
+  100% {
+      transform: scale(1);
+  }
+}
+
+.pointer {
+  cursor: pointer;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+.disabled{
+  pointer-events:none;
+  opacity:0.4;
+}
+
+.bg-king {
+  background-color: hsla(41, 66%, 52%, 0.7);
+}
+
+.btn-outline-dark {
+  background-color: white;
+}
+
+@media (min-width: 576px)  {
+  html {
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 1.2rem;
+  }
+}
