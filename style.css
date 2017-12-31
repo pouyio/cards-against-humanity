@@ -1,7 +1,7 @@
 html, body {
     font-family: 'Roboto', sans-serif;
     white-space: inherit;
-    font-size: 1rem;
+    font-size: .89rem;
     background: url(/pattern.png);
 }
 
@@ -15,6 +15,18 @@ html, body {
 
 .beat-forever {
     animation: beat-me .7s linear infinite;
+}
+
+.ribbon { 
+    position: fixed;
+    transform: rotate(-45deg);
+    width: 300px;
+    bottom: 48px;
+    right: -83px;
+    border: 2px solid goldenrod;
+    background-color: darkgoldenrod;
+    font-size: 1.2em;
+    z-index: 10;
 }
   
 @keyframes rotate-me {
@@ -67,7 +79,7 @@ html, body {
   
   @media (min-width: 576px)  {
     html {
-      font-size: 1.1rem;
+      font-size: 1rem;
     }
   }
   
