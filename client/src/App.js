@@ -155,7 +155,7 @@ class App extends Component {
         <Alert stack={
           {
             limit: 3,
-            position: 'top-right',
+            position: 'bottom',
             effect: 'slide',
             beep: false,
             timeout: 3000,
