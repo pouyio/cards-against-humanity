@@ -19,10 +19,11 @@ export default class Human extends Component {
 
         return (
             <li className={'list-group-item card ' + responseClass}>
+                {this.props.selectable && 'No selectable'}
                 {!this.props.human.response && EmojiTimer}
                 {this.props.human.response && <div className="card-body p-3" style={{ fontStyle: 'italic', fontSize: '1.2em' }} dangerouslySetInnerHTML={safeResponse} />}
                 {this.props.human.response &&
-                    <div className="btn btn-outline-dark d-block" onClick={e => this.onSelected(this.props.human.id)}>
+                    <div className={`btn btn-outline-dark d-block ${!this.props.selectable ? 'disabled': ''}` } onClick={e => this.onSelected(this.props.human.id)}>
                         {getBeatingEmoji('🦄')} Winner {getBeatingEmoji('‼️')}
                     </div>
                 }
