@@ -6,8 +6,8 @@ const path = require('path');
 const https = require('https');
 const http = require('http');
 const options = {
-    key: fs.readFileSync('/etc/letsencrypt/live/comic/privkey.pem'),
-    cert: fs.readFileSync('/etc/letsencrypt/live/comic/fullchain.pem')
+    key: fs.readFileSync('/etc/letsencrypt/live/aws/privkey.pem'),
+    cert: fs.readFileSync('/etc/letsencrypt/live/aws/fullchain.pem')
 }
 const server2 = http.createServer(app2);
 const server = https.createServer(options, app);
@@ -29,6 +29,19 @@ const _getRandomCards = (type, number) => {
 app2.use('*', (req, res) => res.redirect(`https://${req.headers.host}:${PORT}`));
 
 app.use(express.static(path.join(__dirname, 'client/build')));
+
+app.use((req, res, next) => {
+
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, x-xsrf-token, Authorization');
+
+    if ('OPTIONS' == req.method) {
+        res.sendStatus(200);
+    } else {
+        next();
+    }
+})
 
 app.get('/card/:number', (req, res) => {
     const cards = new Array(+req.params.number).fill(1).map(c => {
@@ -114,7 +127,7 @@ io.on('connection', (socket) => {
         io.to(socket.human.room).emit('leave-room', humans);
         if (socket.human.isLeader) {
             const room = socket.adapter.rooms[socket.human.room];
-            if(room) room.blackCard = _newRound(socket.human.room);
+            if (room) room.blackCard = _newRound(socket.human.room);
         }
 
     });
@@ -128,7 +141,7 @@ io.on('connection', (socket) => {
         io.to(socket.human.room).emit('leave-room', humans);
         if (socket.human.isLeader) {
             const room = socket.adapter.rooms[socket.human.room];
-            if(room) room.blackCard = _newRound(socket.human.room);
+            if (room) room.blackCard = _newRound(socket.human.room);
         }
 
     });
