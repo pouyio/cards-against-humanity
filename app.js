@@ -3,14 +3,14 @@ const app = express();
 const app2 = express();
 const fs = require('fs');
 const path = require('path');
-const https = require('https');
+const spdy = require('spdy');
 const http = require('http');
 const options = {
     key: fs.readFileSync('/etc/letsencrypt/live/aws/privkey.pem'),
     cert: fs.readFileSync('/etc/letsencrypt/live/aws/fullchain.pem')
 }
 const server2 = http.createServer(app2);
-const server = https.createServer(options, app);
+const server = spdy.createServer(options, app);
 const io = require('socket.io').listen(server);
 const raw = require('./data.json');
 raw.blackCards = raw.blackCards.filter(e => e.pick === 1);
