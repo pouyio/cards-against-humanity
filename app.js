@@ -1,20 +1,13 @@
 const express = require('express')
 const app = express();
-const app2 = express();
-const fs = require('fs');
 const path = require('path');
-const spdy = require('spdy');
 const http = require('http');
-const options = {
-    key: fs.readFileSync('/etc/letsencrypt/live/aws/privkey.pem'),
-    cert: fs.readFileSync('/etc/letsencrypt/live/aws/fullchain.pem')
-}
-const server2 = http.createServer(app2);
-const server = spdy.createServer(options, app);
+const cors = require('cors');
+const server = http.createServer(app);
 const io = require('socket.io').listen(server);
 const raw = require('./data.json');
 raw.blackCards = raw.blackCards.filter(e => e.pick === 1);
-const PORT = 8083;
+const PORT = 80;
 
 const _getRandomCards = (type, number) => {
     const _card = () => raw[type][Math.floor(Math.random() * raw[type].length)];
@@ -26,7 +19,7 @@ const _getRandomCards = (type, number) => {
     }
 }
 
-app2.use('*', (req, res) => res.redirect(`https://${req.headers.host}:${PORT}`));
+app.use(cors());
 
 app.use(express.static(path.join(__dirname, 'client/build')));
 
@@ -161,5 +154,4 @@ io.on('connection', (socket) => {
 
 });
 
-server.listen(PORT, () => console.log(`Comics-api listening on port ${PORT}!`));
-server2.listen(80);
+server.listen(PORT, () => console.log(`CAH listening on port ${PORT}!`));
