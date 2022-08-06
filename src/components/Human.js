@@ -19,7 +19,6 @@ export default class Human extends Component {
 
         return (
             <li className={'list-group-item card ' + responseClass}>
-                {this.props.selectable && 'No selectable'}
                 {!this.props.human.response && EmojiTimer}
                 {this.props.human.response && <div className="card-body p-3" style={{ fontStyle: 'italic', fontSize: '1.2em' }} dangerouslySetInnerHTML={safeResponse} />}
                 {this.props.human.response &&
