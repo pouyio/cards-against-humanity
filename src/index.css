@@ -4,7 +4,7 @@ html, body {
   font-family: 'Roboto', sans-serif;
   white-space: inherit;
   font-size: .89rem;
-  background: url(/pattern.png);
+  background: url(/public/pattern.png);
 }
 
 #root {
