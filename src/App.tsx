@@ -1,0 +1,174 @@
+import React, { useEffect, useState } from "react";
+import Alert from "react-s-alert";
+import { Ribbon } from "./components/Ribbon";
+import { Room } from "./components/Room";
+import { HumanList } from "./components/HumanList";
+import { Question } from "./components/Question";
+import { HumanDashboard } from "./components/HumanDashboard";
+import { Login } from "./components/Login";
+import { Logout } from "./components/Logout";
+import { onMessage, sendMessage } from "./api";
+
+export type Human = {
+  nick: string;
+  counter: number;
+  room: string;
+  isLeader: boolean;
+  id: string;
+  response?: string;
+};
+
+export const App: React.FC = () => {
+  const [room, setRoom] = useState(localStorage.getItem("CAH:room") || false);
+  const [nick, setNick] = useState(localStorage.getItem("CAH:nick") || "");
+  const [myId, setMyId] = useState("");
+  const [counter, setCounter] = useState(
+    localStorage.getItem("CAH:counter") || 0
+  );
+  const [humans, setHumans] = useState<Human[]>([]);
+  const [blackCard, setBlackCard] = useState("");
+  const [whiteCards, setWhiteCards] = useState<any[]>([]);
+  const [selectedCard, setSelectedCard] = useState<{
+    id?: string;
+    text?: string;
+  }>({});
+
+  const _updateHumans = (humans) => {
+    setHumans((prevState) => {
+      const newHumans = humans.reduce((acc, human) => {
+        const humanFound = prevState.find((h) => h.id === human.id);
+        return humanFound ? acc.concat([humanFound]) : acc.concat([human]);
+      }, [] as Human[]);
+      return newHumans;
+    });
+  };
+
+  useEffect(() => {
+    if (room && nick) {
+      sendMessage("enter-room", nick, room, counter);
+    }
+    onMessage("enter-room", (humans) => _updateHumans(humans));
+
+    onMessage("leave-room", (humans) => _updateHumans(humans));
+
+    onMessage("just-connected", ([nick, room, myId]) => {
+      localStorage.setItem("CAH:nick", nick);
+      localStorage.setItem("CAH:room", room);
+      setNick(nick);
+      setRoom(room);
+      setMyId(myId);
+    });
+
+    onMessage("new-round", async ([blackCard, humans]) => {
+      const res = await (
+        await fetch(`http://localhost:3001/card/${10 - whiteCards.length}`, {
+          headers: { "Access-Control-Allow-Origin": "*" },
+        })
+      ).json();
+      setBlackCard(blackCard);
+      setHumans(humans);
+      setSelectedCard({});
+      setWhiteCards((prevState) => prevState.concat(res));
+    });
+
+    onMessage("card-selected", ([_cardId, cardtext, _friendNick, humanId]) => {
+      setHumans((prevState) => {
+        const index = prevState.findIndex((h) => h.id === humanId);
+        prevState[index].response = cardtext;
+        return [...prevState];
+      });
+    });
+
+    onMessage("you-won", ([human]) => {
+      localStorage.setItem("CAH:counter", human.counter);
+      setCounter(human.counter);
+
+      // TODO myId is empty when the callback is executed, myId should keep the reference
+      const { AlertType, msg } =
+        myId === human.id
+          ? { AlertType: Alert.success, msg: `🎊 You win 🎉` }
+          : { AlertType: Alert.info, msg: `👎🏻 ${human.nick} won... 😒` };
+
+      AlertType(msg);
+    });
+  }, []);
+
+  function onEnter(values) {
+    sendMessage("enter-room", values.nick, values.room, counter);
+  }
+
+  function onLeave() {
+    sendMessage("leave-room", nick, room);
+    localStorage.removeItem("CAH:room");
+    localStorage.removeItem("CAH:counter");
+    setRoom(false);
+    // REMOVE THIS SHIT destroying socket global variable and putting it inside the state
+    window.location.reload();
+  }
+
+  function onSelected(card) {
+    setWhiteCards((prevState) => prevState.filter((c) => c.id !== card.id));
+    sendMessage("card-selected", card.id, card.text);
+  }
+
+  function onWinner(id) {
+    sendMessage("round-win", id);
+  }
+
+  const isLoged = nick && room;
+  const leader = humans.find((h) => h.isLeader);
+  const imLeader = leader && leader.id === myId;
+  const classNames = `d-flex flex-column ${
+    isLoged ? "" : " justify-content-center"
+  }`;
+
+  return (
+    <div className={classNames} style={{ minHeight: "100vh" }}>
+      {isLoged && (
+        <Room room={room} nick={nick}>
+          <Logout onLeave={onLeave} />
+        </Room>
+      )}
+
+      {imLeader && <Ribbon />}
+
+      <div className="container">
+        <div className="row">
+          {!isLoged && (
+            <div className="col-12">
+              <Login nick={nick} onEnter={(e) => onEnter(e)} />
+            </div>
+          )}
+
+          {isLoged && (
+            <div className="col-12">
+              <div className="d-flex flex-column py-3">
+                {!imLeader && <HumanList myId={myId} humans={humans} />}
+
+                <Question
+                  disabled={!!(imLeader || selectedCard.id)}
+                  blackCard={blackCard}
+                  whiteCards={whiteCards}
+                  onSelected={(card) => onSelected(card)}
+                />
+
+                {imLeader && (
+                  <HumanDashboard
+                    myId={myId}
+                    humans={humans}
+                    onWinner={(id) => onWinner(id)}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      <Alert
+        stack={{
+          limit: 3,
+        }}
+      />
+    </div>
+  );
+};
