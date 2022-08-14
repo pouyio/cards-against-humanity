@@ -7,44 +7,42 @@ import Question from "./components/Question.js";
 import HumanDashboard from "./components/HumanDashboard.js";
 import Login from "./components/Login.js";
 import Logout from "./components/Logout.js";
-import openSocket from "socket.io-client";
-
-const socket = openSocket("http://localhost:80");
+import { onMessage, sendMessage } from "./api";
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      room: localStorage.getItem("room") || false,
-      nick: localStorage.getItem("nick") || "",
-      counter: localStorage.getItem("counter") || 0,
+      room: localStorage.getItem("CAH:room") || false,
+      nick: localStorage.getItem("CAH:nick") || "",
+      counter: localStorage.getItem("CAH:counter") || 0,
       humans: [],
       blackCard: "",
       whiteCards: [],
       selectedCard: {},
     };
     if (this.state.room && this.state.nick)
-      socket.emit(
+      sendMessage(
         "enter-room",
         this.state.nick,
         this.state.room,
         this.state.counter
       );
 
-    socket.on("enter-room", (humans) => this._updateHumans(humans));
+    onMessage("enter-room", (humans) => this._updateHumans(humans));
 
-    socket.on("leave-room", (humans) => this._updateHumans(humans));
+    onMessage("leave-room", (humans) => this._updateHumans(humans));
 
-    socket.on("just-connected", (myId, nick, room) => {
-      localStorage.setItem("nick", nick);
-      localStorage.setItem("room", room);
+    onMessage("just-connected", ([nick, room, myId]) => {
+      localStorage.setItem("CAH:nick", nick);
+      localStorage.setItem("CAH:room", room);
       this.setState({ nick, room, myId });
     });
 
-    socket.on("new-round", async (blackCard, humans) => {
+    onMessage("new-round", async ([blackCard, humans]) => {
       const res = await (
         await fetch(
-          `http://localhost:80/card/${10 - this.state.whiteCards.length}`,
+          `http://localhost:3001/card/${10 - this.state.whiteCards.length}`,
           { headers: { "Access-Control-Allow-Origin": "*" } }
         )
       ).json();
@@ -52,11 +50,11 @@ class App extends Component {
         blackCard,
         humans,
         selectedCard: {},
-        whiteCards: prevState.whiteCards.concat(res.cards),
+        whiteCards: prevState.whiteCards.concat(res),
       }));
     });
 
-    socket.on("card-selected", (_cardId, cardtext, _friendNick, humanId) => {
+    onMessage("card-selected", ([_cardId, cardtext, _friendNick, humanId]) => {
       this.setState((prevState) => {
         const index = prevState.humans.findIndex((h) => h.id === humanId);
         prevState.humans[index].response = cardtext;
@@ -64,8 +62,8 @@ class App extends Component {
       });
     });
 
-    socket.on("you-won", (human) => {
-      localStorage.setItem("counter", human.counter);
+    onMessage("you-won", ([human]) => {
+      localStorage.setItem("CAH:counter", human.counter);
 
       const { AlertType, msg } =
         this.state.myId === human.id
@@ -87,13 +85,13 @@ class App extends Component {
   }
 
   onEnter(values) {
-    socket.emit("enter-room", values.nick, values.room, this.state.counter);
+    sendMessage("enter-room", values.nick, values.room, this.state.counter);
   }
 
   onLeave(event) {
-    socket.emit("leave-room", this.state.nick, this.state.room);
-    localStorage.removeItem("room");
-    localStorage.removeItem("counter");
+    sendMessage("leave-room", this.state.nick, this.state.room);
+    localStorage.removeItem("CAH:room");
+    localStorage.removeItem("CAH:counter");
     this.setState({ room: false });
     // REMOVE THIS SHIT destroying socket global variable and putting it inside the state
     window.location.reload();
@@ -103,11 +101,11 @@ class App extends Component {
     this.setState((prevState) => ({
       whiteCards: prevState.whiteCards.filter((c) => c.id !== card.id),
     }));
-    socket.emit("card-selected", card.id, card.text);
+    sendMessage("card-selected", card.id, card.text);
   }
 
   onWinner(id) {
-    socket.emit("round-win", id);
+    sendMessage("round-win", id);
   }
 
   render() {
