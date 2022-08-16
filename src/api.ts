@@ -1,4 +1,7 @@
-export const socket = new WebSocket("ws://localhost:3001/ws");
+const BASE_URI = window.location.host;
+// const BASE_URI = "localhost:8080";
+
+export const socket = new WebSocket(`ws://${BASE_URI}/ws`);
 
 const actionHandlers = {};
 
@@ -23,4 +26,11 @@ const onMessage = (message, cb) => {
   actionHandlers[message] = cb;
 };
 
-export { sendMessage, onMessage };
+const getCards = async (length: number) => {
+  const res = await fetch(`http://${BASE_URI}/card/${10 - length}`, {
+    headers: { "Access-Control-Allow-Origin": "*" },
+  });
+  return res.json();
+};
+
+export { sendMessage, onMessage, getCards };

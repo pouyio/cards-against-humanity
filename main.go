@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var addr = flag.String("addr", ":3001", "http server address")
+var addr = flag.String("addr", ":8080", "http server address")
 
 func middlewareCors(next http.Handler) http.Handler {
 	return http.HandlerFunc(

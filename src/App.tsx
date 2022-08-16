@@ -7,7 +7,7 @@ import { Question } from "./components/Question";
 import { HumanDashboard } from "./components/HumanDashboard";
 import { Login } from "./components/Login";
 import { Logout } from "./components/Logout";
-import { onMessage, sendMessage } from "./api";
+import { getCards, onMessage, sendMessage } from "./api";
 
 export type Human = {
   nick: string;
@@ -58,6 +58,24 @@ export const App: React.FC = () => {
   }, [myId]);
 
   useEffect(() => {
+    onMessage("new-round", async ([blackCard, humans]) => {
+      const res = await getCards(whiteCards.length);
+      setBlackCard(blackCard);
+      setHumans(humans);
+      setSelectedCard({});
+      setWhiteCards((prevState) => prevState.concat(res));
+    });
+  }, [whiteCards]);
+  {
+    onMessage("new-round", async ([blackCard, humans]) => {
+      const res = await getCards(whiteCards.length);
+      setBlackCard(blackCard);
+      setHumans(humans);
+      setSelectedCard({});
+      setWhiteCards((prevState) => prevState.concat(res));
+    });
+  }
+  useEffect(() => {
     if (room && nick) {
       sendMessage("enter-room", nick, room, counter);
     }
@@ -71,18 +89,6 @@ export const App: React.FC = () => {
       setNick(nick);
       setRoom(room);
       setMyId(myId);
-    });
-
-    onMessage("new-round", async ([blackCard, humans]) => {
-      const res = await (
-        await fetch(`http://localhost:3001/card/${10 - whiteCards.length}`, {
-          headers: { "Access-Control-Allow-Origin": "*" },
-        })
-      ).json();
-      setBlackCard(blackCard);
-      setHumans(humans);
-      setSelectedCard({});
-      setWhiteCards((prevState) => prevState.concat(res));
     });
 
     onMessage("card-selected", ([_cardId, cardtext, _friendNick, humanId]) => {
