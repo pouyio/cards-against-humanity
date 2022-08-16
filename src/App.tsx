@@ -44,6 +44,20 @@ export const App: React.FC = () => {
   };
 
   useEffect(() => {
+    onMessage("you-won", ([human]) => {
+      localStorage.setItem("CAH:counter", human.counter);
+      setCounter(human.counter);
+
+      const { AlertType, msg } =
+        myId === human.id
+          ? { AlertType: Alert.success, msg: `🎊 You win 🎉` }
+          : { AlertType: Alert.info, msg: `👎🏻 ${human.nick} won... 😒` };
+
+      AlertType(msg);
+    });
+  }, [myId]);
+
+  useEffect(() => {
     if (room && nick) {
       sendMessage("enter-room", nick, room, counter);
     }
@@ -77,19 +91,6 @@ export const App: React.FC = () => {
         prevState[index].response = cardtext;
         return [...prevState];
       });
-    });
-
-    onMessage("you-won", ([human]) => {
-      localStorage.setItem("CAH:counter", human.counter);
-      setCounter(human.counter);
-
-      // TODO myId is empty when the callback is executed, myId should keep the reference
-      const { AlertType, msg } =
-        myId === human.id
-          ? { AlertType: Alert.success, msg: `🎊 You win 🎉` }
-          : { AlertType: Alert.info, msg: `👎🏻 ${human.nick} won... 😒` };
-
-      AlertType(msg);
     });
   }, []);
 
