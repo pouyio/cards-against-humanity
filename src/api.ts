@@ -1,7 +1,12 @@
 const BASE_URI = window.location.host;
+const WS_PROTOCOL = "wss";
+const HTTP_PROTOCOL = "https";
 // const BASE_URI = "localhost:8080";
+// const WS_PROTOCOL = 'ws'
+// const HTTP_PROTOCOL = 'http'
 
-export const socket = new WebSocket(`ws://${BASE_URI}/ws`);
+export const socket = new WebSocket(`${WS_PROTOCOL}://${BASE_URI}/ws`);
+const API_ENDPOINT = `${HTTP_PROTOCOL}://${BASE_URI}`;
 
 const actionHandlers = {};
 
@@ -27,7 +32,7 @@ const onMessage = (message, cb) => {
 };
 
 const getCards = async (length: number) => {
-  const res = await fetch(`http://${BASE_URI}/card/${10 - length}`, {
+  const res = await fetch(`${API_ENDPOINT}/card/${10 - length}`, {
     headers: { "Access-Control-Allow-Origin": "*" },
   });
   return res.json();
