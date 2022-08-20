@@ -1,7 +1,8 @@
 name: Deploy to Fly
 on:
   push:
-    - master
+    branches:
+      - master
 jobs:
   deploy:
     name: Deploy
