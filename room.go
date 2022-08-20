@@ -130,7 +130,7 @@ func recalculateLeader(room *Room) {
 		clientsArr[leaderIndex].IsLeader = false
 	}
 
-	if newLeaderIndex >= 0 {
+	if newLeaderIndex >= 0 && len(clientsArr) > 0 {
 		clientsArr[newLeaderIndex].IsLeader = true
 	}
 
