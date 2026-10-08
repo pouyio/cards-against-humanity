@@ -1,12 +1,8 @@
 const BASE_URI = window.location.host;
-const WS_PROTOCOL = "wss";
-const HTTP_PROTOCOL = "https";
-// const BASE_URI = "localhost:8080";
-// const WS_PROTOCOL = 'ws'
-// const HTTP_PROTOCOL = 'http'
+const WS_PROTOCOL = window.location.protocol === "https:" ? "wss" : "ws";
 
 export const socket = new WebSocket(`${WS_PROTOCOL}://${BASE_URI}/ws`);
-const API_ENDPOINT = `${HTTP_PROTOCOL}://${BASE_URI}`;
+const API_ENDPOINT = window.location.origin;
 
 const actionHandlers = {};
 

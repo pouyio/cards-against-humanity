@@ -8,6 +8,13 @@ Made with:
 - ~~Socket io~~ Native websockets
 - React
 
+## Development
+
+Use Node.js 26.11.1 or newer. With [nvm](https://github.com/nvm-sh/nvm), run
+`nvm use`, then install dependencies with `npm ci`. Start the client dev
+server with `npm run dev` and create a production client bundle with
+`npm run build:client`.
+
 ## To-Do
 - [x] Keep session on local storage.
 - [ ] Manage cards to avoid duplicates.

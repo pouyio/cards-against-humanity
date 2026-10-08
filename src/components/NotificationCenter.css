@@ -1,0 +1,38 @@
+.notification-center {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1100;
+  display: flex;
+  width: min(24rem, calc(100vw - 2rem));
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.notification {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 1rem;
+  border-radius: 0.25rem;
+  box-shadow: 0 0.25rem 0.75rem rgb(0 0 0 / 20%);
+  color: white;
+}
+
+.notification-success {
+  background-color: #218838;
+}
+
+.notification-info {
+  background-color: #117a8b;
+}
+
+.notification-dismiss {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1.25rem;
+  line-height: 1;
+}

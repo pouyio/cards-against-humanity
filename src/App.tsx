@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import Alert from "react-s-alert";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Ribbon } from "./components/Ribbon";
 import { Room } from "./components/Room";
 import { HumanList } from "./components/HumanList";
@@ -7,6 +6,11 @@ import { Question } from "./components/Question";
 import { HumanDashboard } from "./components/HumanDashboard";
 import { Login } from "./components/Login";
 import { Logout } from "./components/Logout";
+import {
+  NotificationCenter,
+  type Notification,
+  type NotificationKind,
+} from "./components/NotificationCenter";
 import { getCards, onMessage, sendMessage } from "./api";
 
 export type Human = {
@@ -32,6 +36,23 @@ export const App: React.FC = () => {
     id?: string;
     text?: string;
   }>({});
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const nextNotificationId = useRef(0);
+
+  const notify = useCallback((kind: NotificationKind, message: string) => {
+    const notification = {
+      id: nextNotificationId.current++,
+      kind,
+      message,
+    };
+    setNotifications((current) => [...current, notification].slice(-3));
+  }, []);
+
+  const dismissNotification = useCallback((id: number) => {
+    setNotifications((current) =>
+      current.filter((notification) => notification.id !== id)
+    );
+  }, []);
 
   const _updateHumans = (humans) => {
     setHumans((prevState) => {
@@ -48,14 +69,14 @@ export const App: React.FC = () => {
       localStorage.setItem("CAH:counter", human.counter);
       setCounter(human.counter);
 
-      const { AlertType, msg } =
+      const { kind, message } =
         myId === human.id
-          ? { AlertType: Alert.success, msg: `🎊 You win 🎉` }
-          : { AlertType: Alert.info, msg: `👎🏻 ${human.nick} won... 😒` };
+          ? { kind: "success" as const, message: "🎊 You win 🎉" }
+          : { kind: "info" as const, message: `👎🏻 ${human.nick} won... 😒` };
 
-      AlertType(msg);
+      notify(kind, message);
     });
-  }, [myId]);
+  }, [myId, notify]);
 
   useEffect(() => {
     onMessage("new-round", async ([blackCard, humans]) => {
@@ -171,10 +192,9 @@ export const App: React.FC = () => {
           )}
         </div>
       </div>
-      <Alert
-        stack={{
-          limit: 3,
-        }}
+      <NotificationCenter
+        notifications={notifications}
+        onDismiss={dismissNotification}
       />
     </div>
   );

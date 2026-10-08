@@ -1,18 +1,20 @@
 # syntax=docker/dockerfile:1
 
 # node build
-FROM node:16.14-alpine as node-builder
+FROM node:26-alpine3.24 as node-builder
 
 WORKDIR /usr/src/front
 
 COPY package.json ./
-COPY yarn.lock ./
+COPY package-lock.json ./
 COPY tsconfig.json ./
+COPY vite.config.mts ./
+COPY index.html ./
 COPY public/ ./public/
 COPY src/ ./src/
 
-RUN yarn install --frozen-lockfile
-RUN yarn build
+RUN npm ci
+RUN npm run build
 
 # go build
 FROM golang:1.19-alpine as go-builder

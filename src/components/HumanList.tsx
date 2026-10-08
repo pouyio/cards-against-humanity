@@ -1,4 +1,4 @@
-import { Human } from "App";
+import { Human } from "../App";
 
 const BiggerEmoji: React.FC<{ emoji: string }> = ({ emoji }) => (
   <span
