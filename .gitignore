@@ -30,7 +30,6 @@
 npm-debug.log
 testem.log
 /typings
-package-lock.json
 
 # e2e
 /e2e/*.js
@@ -61,4 +60,3 @@ Thumbs.db
 /clientnpm-debug.log*
 /clientyarn-debug.log*
 /clientyarn-error.log*
-
